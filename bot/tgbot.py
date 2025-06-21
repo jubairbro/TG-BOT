@@ -178,7 +178,8 @@ def send_help(message):
 │  ├─ /ports  : পোর্ট তালিকা।
 │  └─ /rules  : নিয়মাবলী।
 │
-└─╼ </pre>"""
+└─╼ </pre>
+<b>Bot by : @JubairFF</b>"""
         bot.reply_to(message, user_help_text)
 
 @bot.message_handler(regexp="^(❓ সাহায্য)$")
