@@ -11,8 +11,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 from functools import wraps
 
 # ============== কনফিগারেশন ==============
-BOT_TOKEN = "8002173814:AAHMo01WzE37PVSM1YYnocYnxiV0V8jK7Wk"
-ADMIN_IDS = [5487394544,6801360422,1956820398] # প্রধান অ্যাডমিনদের আইডি
+BOT_TOKEN = "your_bot_token"
+ADMIN_IDS = [00001726262,18363637373,52820202373773] # Admin ids
 GROUP_ID = -1002758027133 # ওয়েলকাম মেসেজ এবং /mentionall এর জন্য গ্রুপের আইডি
 DB_FILE = "/root/bot/commands.db" # ভিডিও কমান্ড সংরক্ষণের জন্য ডেটাবেস
 # =========================================
