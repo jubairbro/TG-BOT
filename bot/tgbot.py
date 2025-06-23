@@ -9,6 +9,7 @@ import time
 import sqlite3
 import json # Added for JSON parsing in speedtest
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from telebot import apihelper # Import for error handling
 from functools import wraps
 
 # ============== কনফিগারেশন ==============
@@ -86,6 +87,20 @@ def _send_permission_denied_message(message_or_call, text):
         bot.answer_callback_query(message_or_call.id, text, show_alert=True)
     else:
         bot.reply_to(message_or_call, text)
+
+def _edit_message_safe(chat_id, message_id, text, reply_markup=None, disable_web_page_preview=False):
+    """
+    Safely edits a message, catching 'message is not modified' errors.
+    """
+    try:
+        bot.edit_message_text(text, chat_id, message_id, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
+    except apihelper.ApiError as e:
+        if e.error_code == 400 and "message is not modified" in str(e):
+            # This error means the message content/markup is already what we tried to set.
+            # It's not a critical error, so we can just log/pass.
+            print(f"DEBUG: Message {message_id} in chat {chat_id} not modified (already same content). Ignoring.")
+        else:
+            raise # Re-raise other API errors
 
 def check_group_membership_and_admin(user_id):
     """
@@ -269,7 +284,13 @@ def confirm_reboot_keyboard():
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, _add_credit_line(f"<b>স্বাগতম, {message.from_user.full_name}!</b>\nআমি আপনাদের সার্ভার ম্যানেজমেন্ট বট। 🤖"), reply_markup=generate_main_keyboard())
+    user_id = message.from_user.id
+    if user_id in BOT_OWNER_IDS:
+        welcome_message = "<b>👋 হ্যালো বস!</b> 👑\nসার্ভার ম্যানেজমেন্ট বট আপনার সেবায় প্রস্তুত।\nকী করতে পারি আপনার জন্য?"
+    else:
+        welcome_message = f"<b>স্বাগতম, {message.from_user.full_name}!</b>\nআমি আপনাদের সার্ভার ম্যানেজমেন্ট বট। 🤖"
+    
+    bot.reply_to(message, _add_credit_line(welcome_message), reply_markup=generate_main_keyboard())
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
@@ -415,10 +436,10 @@ def handle_general_menu_callbacks(call):
 │  └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
 │
 └─╼ </pre>"""
-            bot.edit_message_text(_add_credit_line(help_text), msg_chat_id, msg_message_id, reply_markup=generate_main_keyboard())
+            _edit_message_safe(msg_chat_id, msg_message_id, _add_credit_line(help_text), reply_markup=generate_main_keyboard())
 
     except Exception as e:
-        bot.send_message(msg_chat_id, f"❌ কার্যক্রমে সমস্যা হয়েছে: <code>{e}</code>", reply_markup=generate_main_keyboard())
+        _edit_message_safe(msg_chat_id, msg_message_id, f"❌ কার্যক্রমে সমস্যা হয়েছে: <code>{e}</code>", reply_markup=generate_main_keyboard())
     bot.answer_callback_query(call.id)
 
 # Handler specifically for speedtest callback (admin only)
@@ -492,9 +513,9 @@ def send_report_action(chat_id, message_id):
 ╰───────────</pre>
 
 ✅ সার্ভার স্ট্যাবল এবং সক্রিয় আছে।"""
-        bot.edit_message_text(_add_credit_line(report_text), chat_id, message_id, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, message_id, _add_credit_line(report_text), reply_markup=generate_main_keyboard())
     except Exception as e:
-        bot.edit_message_text(f"❌ রিপোর্ট তৈরি করতে সমস্যা হয়েছে: <code>{e}</code>", chat_id, message_id, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, message_id, f"❌ রিপোর্ট তৈরি করতে সমস্যা হয়েছে: <code>{e}</code>", reply_markup=generate_main_keyboard())
 
 def server_health_action(chat_id, message_id):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
@@ -515,15 +536,15 @@ def server_health_action(chat_id, message_id):
 │  Disk: {create_bar(disk_percent)}
 │  Swap: {create_bar(swap_percent)}
 ╰───────────</pre>"""
-        bot.edit_message_text(_add_credit_line(health_report), chat_id, message_id, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, message_id, _add_credit_line(health_report), reply_markup=generate_main_keyboard())
     except Exception as e:
-        bot.edit_message_text(f"❌ সার্ভার হেল্থ চেক করতে সমস্যা হয়েছে: <code>{e}</code>", chat_id, message_id, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, message_id, f"❌ সার্ভার হেল্থ চেক করতে সমস্যা হয়েছে: <code>{e}</code>", reply_markup=generate_main_keyboard())
 
 
 def show_service_status_action(chat_id, message_id):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
     status_report = get_formatted_service_status()
-    bot.edit_message_text(_add_credit_line(status_report), chat_id, message_id, reply_markup=generate_main_keyboard())
+    _edit_message_safe(chat_id, message_id, _add_credit_line(status_report), reply_markup=generate_main_keyboard())
 
 def send_rules_action(chat_id, message_id):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
@@ -540,7 +561,7 @@ def send_rules_action(chat_id, message_id):
 │     ডার্ক ওয়েব ভিজিট নিষিদ্ধ এগুলার জন্য,
 │     VPS ব্যান হতে পারে ।
 ╰───────────</pre>"""
-    bot.edit_message_text(_add_credit_line(rules_text), chat_id, message_id, reply_markup=generate_main_keyboard())
+    _edit_message_safe(chat_id, message_id, _add_credit_line(rules_text), reply_markup=generate_main_keyboard())
 
 def send_ports_info_action(chat_id, message_id):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
@@ -563,13 +584,13 @@ def send_ports_info_action(chat_id, message_id):
 │ • Trojan     : 443
 │ • Shadowsocks: 443
 ╰───────────</pre>"""
-    bot.edit_message_text(_add_credit_line(ports_text), chat_id, message_id, reply_markup=generate_main_keyboard())
+    _edit_message_safe(chat_id, message_id, _add_credit_line(ports_text), reply_markup=generate_main_keyboard())
 
 def run_speedtest_action(chat_id, message_id_to_edit=None): 
     # Determine which message to edit or if a new one needs to be sent
     if message_id_to_edit:
         # Edit existing message (from callback)
-        bot.edit_message_text("⏳ স্পিড টেস্ট চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", chat_id, message_id_to_edit, reply_markup=None)
+        _edit_message_safe(chat_id, message_id_to_edit, "⏳ স্পিড টেস্ট চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", reply_markup=None)
         msg_id_for_final_edit = message_id_to_edit
     else:
         # Send a new temporary message (from direct command)
@@ -579,8 +600,8 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
 
     try:
-        # Changed to use --format=json for Ookla speedtest CLI
-        result = subprocess.run(['speedtest', '--format=json'], capture_output=True, text=True, timeout=300)
+        # Changed to use --format=json and --share for Ookla speedtest CLI
+        result = subprocess.run(['speedtest', '--format=json', '--share'], capture_output=True, text=True, timeout=300)
         output_json = result.stdout.strip()
 
         if result.returncode == 0 and output_json:
@@ -590,45 +611,55 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
             ip_address = data.get('interface', {}).get('externalIp', 'N/A')
             isp = data.get('isp', 'N/A')
             ping_ms = data.get('ping', {}).get('latency', 'N/A')
-            isp_rating = data.get('ispRating', 'N/A') # Note: Ookla's API might not always return this
+            isp_rating = data.get('ispRating', 'N/A') 
             sponsor = data.get('server', {}).get('sponsor', 'N/A')
 
-            # Download/Upload in bytes, convert to MB
-            download_bytes = data.get('download', {}).get('bytes', 0)
-            upload_bytes = data.get('upload', {}).get('bytes', 0)
-            download_mb = f"{(download_bytes / (1024**2)):.2f}MB" if download_bytes else 'N/A'
-            upload_mb = f"{(upload_bytes / (1024**2)):.2f}MB" if upload_bytes else 'N/A'
+            # Download/Upload in bytes, convert to Mbps
+            download_bps = data.get('download', {}).get('bandwidth', 0)
+            upload_bps = data.get('upload', {}).get('bandwidth', 0)
+            download_mbps = f"{(download_bps * 8 / (10**6)):.2f} Mbps" if download_bps else 'N/A'
+            upload_mbps = f"{(upload_bps * 8 / (10**6)):.2f} Mbps" if upload_bps else 'N/A'
 
             server_name = data.get('server', {}).get('name', 'N/A')
             country = data.get('server', {}).get('country', 'N/A')
-            lat_lon = f"{data.get('server', {}).get('lat', 'N/A')}/{data.get('server', {}).get('lon', 'N/A')}"
+            lat_lon = f"{data.get('server', {}).get('lat', 'N/A')}, {data.get('server', {}).get('lon', 'N/A')}"
+            
+            # Get share URL
+            share_url = data.get('share', {}).get('url', 'N/A')
 
-            speed_text = f"""<b>SPEEDTEST RESULT</b>
-<pre>
-IP: <a href='https://ipinfo.io/{ip_address}'>{ip_address}</a>
-ISP: {isp}
-Ping: {ping_ms:.0f} ms
-ISP Rating: {isp_rating}
-Sponsor: {sponsor}
-Upload: {upload_mb}
-Download: {download_mb}
-Server Name: {server_name}
-Country: {country}
-LAT/LON {lat_lon}
-</pre>
-"""
-            bot.edit_message_text(_add_credit_line(speed_text), chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard(), disable_web_page_preview=True)
+            speed_text = f"""⚡ <b>স্পিড টেস্ট রেজাল্ট</b> ⚡
+
+🌐 <b><u>ইন্টারফেস তথ্য:</u></b>
+  ‣  <b>IP:</b> <a href='https://ipinfo.io/{ip_address}'>{ip_address}</a>
+  ‣  <b>ISP:</b> <i>{isp}</i>
+  ‣  <b>ISP রেটিং:</b> <i>{isp_rating}</i>
+
+📡 <b><u>সার্ভার তথ্য:</u></b>
+  ‣  <b>সার্ভার:</b> <i>{server_name}, {country}</i>
+  ‣  <b>স্পন্সর:</b> <i>{sponsor}</i>
+  ‣  <b>ল্যাট/লং:</b> <i>{lat_lon}</i>
+
+📊 <b><u>পারফরম্যান্স:</u></b>
+  ‣  <b>পিং:</b> <code>{ping_ms:.0f} ms</code>
+  ‣  <b>ডাউনলোড:</b> <code>{download_mbps}</code>
+  ‣  <b>আপলোড:</b> <code>{upload_mbps}</code>
+
+🔗 <b><u>শেয়ার লিংক:</u></b>
+  ‣  <a href='{share_url}'>Speedtest.net Result</a>
+
+✅ আপনার সার্ভারের ইন্টারনেট স্পিড টেস্ট সফলভাবে সম্পন্ন হয়েছে!"""
+            _edit_message_safe(chat_id, msg_id_for_final_edit, _add_credit_line(speed_text), reply_markup=generate_main_keyboard(), disable_web_page_preview=False)
         else:
             error_output = result.stderr.strip() if result.stderr else "কোনো আউটপুট নেই।"
-            bot.edit_message_text(f"❌ স্পিড টেস্ট ব্যর্থ হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।\nবিস্তারিত: <pre>{error_output}</pre>", chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard())
+            _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট ব্যর্থ হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।\nবিস্তারিত:\n<pre>{error_output}</pre>", reply_markup=generate_main_keyboard())
     except FileNotFoundError:
-        bot.edit_message_text("❌ `speedtest` কমান্ডটি খুঁজে পাওয়া যায়নি। সার্ভারে `Ookla Speedtest CLI` ইন্সটল করা আছে কিনা নিশ্চিত করুন। যদি না থাকে, তাদের অফিসিয়াল ওয়েবসাইট থেকে এটি ইন্সটল করতে পারেন।", chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, "❌ `speedtest` কমান্ডটি খুঁজে পাওয়া যায়নি। সার্ভারে `Ookla Speedtest CLI` ইন্সটল করা আছে কিনা নিশ্চিত করুন। যদি না থাকে, তাদের অফিসিয়াল ওয়েবসাইট থেকে এটি ইন্সটল করতে পারেন।", reply_markup=generate_main_keyboard())
     except subprocess.TimeoutExpired:
-        bot.edit_message_text("❌ স্পিড টেস্ট সময়সীমা অতিক্রম করেছে।", chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, "❌ স্পিড টেস্ট সময়সীমা অতিক্রম করেছে।", reply_markup=generate_main_keyboard())
     except json.JSONDecodeError:
-        bot.edit_message_text(f"❌ স্পিড টেস্ট থেকে অবৈধ আউটপুট পাওয়া গেছে। `speedtest` কমান্ডটি ঠিকভাবে কাজ করছে না।\nআউটপুট: <pre>{output_json}</pre>", chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট থেকে অবৈধ আউটপুট পাওয়া গেছে। `speedtest` কমান্ডটি ঠিকভাবে কাজ করছে না।\nআউটপুট:\n<pre>{output_json}</pre>", reply_markup=generate_main_keyboard())
     except Exception as e:
-        bot.edit_message_text(f"❌ স্পিড টেস্ট চলাকালীন অপ্রত্যাশিত ত্রুটি: <code>{e}</code>", chat_id, msg_id_for_final_edit, reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট চলাকালীন অপ্রত্যাশিত ত্রুটি: <code>{e}</code>", reply_markup=generate_main_keyboard())
 
 
 # ============== গ্রুপ ম্যানেজমেন্ট হ্যান্ডলার ==============
@@ -740,9 +771,9 @@ def handle_run_command(message):
             with open("output.txt", "rb") as f: bot.send_document(message.chat.id, f, caption="কমান্ড আউটপুট")
             os.remove("output.txt"); bot.delete_message(msg.chat.id, msg.message_id)
         else:
-            bot.edit_message_text(f"<b>আপনার কমান্ড এর ফলাফল 🤟:</b>\n<pre>{output}</pre>", msg.chat.id, msg.message_id)
+            _edit_message_safe(msg.chat.id, msg.message_id, f"<b>আপনার কমান্ড এর ফলাফল 🤟:</b>\n<pre>{output}</pre>")
     except Exception as e:
-        bot.edit_message_text(f"❌ কমান্ড ব্যর্থ: <code>{e}</code>", msg.chat.id, msg.message_id)
+        _edit_message_safe(msg.chat.id, msg.message_id, f"❌ কমান্ড ব্যর্থ: <code>{e}</code>")
 
 
 # ============== কলব্যাক হ্যান্ডলার (রিবুট কনফার্মেশনের জন্য) ==============
@@ -755,13 +786,13 @@ def handle_reboot_callback_query(call):
 
     if action == "confirm_reboot":
         try:
-            bot.edit_message_text("✅ রিবুট কমান্ড পাঠানো হয়েছে। \n⚠️ সার্ভার কিছুক্ষণের জন্য অফলাইন হয়ে যাবে।", msg.chat.id, msg.message_id, reply_markup=None)
+            _edit_message_safe(msg.chat.id, msg.message_id, "✅ রিবুট কমান্ড পাঠানো হয়েছে। \n⚠️ সার্ভার কিছুক্ষণের জন্য অফলাইন হয়ে যাবে।", reply_markup=None)
             subprocess.run(['sudo', 'reboot'], check=True)
         except Exception as e:
-            bot.edit_message_text(f"❌ রিবুট ব্যর্থ হয়েছে: <code>{e}</code>", msg.chat.id, msg.message_id)
+            _edit_message_safe(msg.chat.id, msg.message_id, f"❌ রিবুট ব্যর্থ হয়েছে: <code>{e}</code>")
 
     elif action == "cancel_action":
-        bot.edit_message_text("👍 কাজটি বাতিল করা হয়েছে।", msg.chat.id, msg.message_id, reply_markup=None)
+        _edit_message_safe(msg.chat.id, msg.message_id, "👍 কাজটি বাতিল করা হয়েছে।", reply_markup=None)
 
     bot.answer_callback_query(call.id)
 
