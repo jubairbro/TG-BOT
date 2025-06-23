@@ -12,8 +12,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 from telebot.apihelper import ApiException # Corrected import for API exceptions
 from functools import wraps
 
-# ============== কনফিগারেশন ==============
-BOT_TOKEN = "your_bot_token" # আপনার বটের টোকেন এখানে দিন
+# ============== Configuration ==============
+BOT_TOKEN = "Your_bot_token" # আপনার বটের টোকেন এখানে দিন
 BOT_OWNER_IDS = [5487394544,1956820398,6801360422] # আপনার বা বটের মালিকদের আইডি এখানে দিন (একাধিক হলে কমা দিয়ে)
 GROUP_ID = -1002758027133 # ওয়েলকাম মেসেজ, /mentionall এবং বট ব্যবহারের অনুমতির জন্য গ্রুপের আইডি
 DB_FILE = "/root/bot/commands.db" # ভিডিও কমান্ড সংরক্ষণের জন্য ডেটাবেস
@@ -24,7 +24,7 @@ bot = telebot.TeleBot(BOT_TOKEN, parse_mode='HTML')
 # Store bot's start time for uptime calculation
 BOT_START_TIME = time.time()
 
-# ============== ডেটাবেস সেটআপ ==============
+# ============== Database Setup ==============
 def init_db():
     conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     cursor = conn.cursor()
@@ -69,7 +69,7 @@ def get_all_commands():
     conn.close()
     return commands
 
-# ============== হেল্পার এবং পারমিশন ফাংশন ==============
+# ============== Helper and Permission Functions ==============
 
 def _add_credit_line(text):
     """Adds the bot's credit line to the end of a message."""
@@ -149,7 +149,7 @@ def premium_user_required(func):
         is_group_member, _ = check_group_membership_and_admin(user_id)
 
         if not is_group_member:
-            _send_permission_denied_message(message_or_call, "❌ আপনি আমাদের প্রিমিয়াম সার্ভার এর ইউজার নন, আপনার জন্য এই বট ব্যাবহারের পারমিশন নেই।")
+            _send_permission_denied_message(message_or_call, "❌ আপনি আমাদের Premium Service এর একজন User নন, আপনার এই বট ব্যবহারের অনুমতি নেই।")
             return
         
         # If passed all checks, proceed
@@ -173,7 +173,7 @@ def admin_required(func):
             return func(message_or_call)
 
         # If not bot owner and not group admin
-        _send_permission_denied_message(message_or_call, "❌ শুধুমাত্র অ্যাডমিনরা এটি ব্যবহার করতে পারবে।")
+        _send_permission_denied_message(message_or_call, "❌ শুধুমাত্র Admin-রা এই কমান্ডটি ব্যবহার করতে পারবে।")
         return
     return wrapper
 
@@ -184,7 +184,7 @@ def owner_required(func):
         user_id, _ = _get_user_and_chat_id(message_or_call)
         if user_id in BOT_OWNER_IDS:
             return func(message_or_call)
-        _send_permission_denied_message(message_or_call, "❌ এই কমান্ডটি শুধুমাত্র বটের Owner জন্য।")
+        _send_permission_denied_message(message_or_call, "❌ এই কমান্ডটি শুধুমাত্র বটের Owner-এর জন্য।")
         return
     return wrapper
 
@@ -248,7 +248,7 @@ def get_formatted_service_status():
         status = check_service_status(service_key)
         status_lines.append(f"│ {display_name:<19} : {status}")
 
-    return "<b>📋 চলমান সার্ভিসসমূহের অবস্থা</b>\n\n<pre>╭─ সার্ভিস স্ট্যাটাস\n" + "\n".join(status_lines) + "\n╰───────────</pre>"
+    return "<b>📋 Running Service Status</b>\n\n<pre>╭─ Service Status\n" + "\n".join(status_lines) + "\n╰───────────</pre>"
 
 def get_bot_uptime():
     """Calculates bot's uptime."""
@@ -258,37 +258,37 @@ def get_bot_uptime():
     m, s = divmod(rem, 60)
     return f"{int(d)}d {int(h)}h {int(m)}m {int(s)}s"
 
-# ============== কীবোর্ড মার্কআপ (ইনলাইন স্টাইল) ==============
+# ============== Keyboard Markups (Inline Style) ==============
 def generate_main_keyboard():
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton('📊 রিপোর্ট', callback_data='show_report'),
-        InlineKeyboardButton('🔋 সার্ভার লোড', callback_data='show_health'),
-        InlineKeyboardButton('📋 সার্ভিস স্ট্যাটাস', callback_data='show_status'),
-        InlineKeyboardButton('📜 নিয়মাবলী', callback_data='show_rules'),
-        InlineKeyboardButton('🔌 পোর্ট ইনফো', callback_data='show_ports'),
-        InlineKeyboardButton('⚡ স্পিড টেস্ট', callback_data='run_speedtest'), 
-        InlineKeyboardButton('❓ সাহায্য', callback_data='show_help')
+        InlineKeyboardButton('📊 Report', callback_data='show_report'),
+        InlineKeyboardButton('🔋 Server Load', callback_data='show_health'),
+        InlineKeyboardButton('📋 Service Status', callback_data='show_status'),
+        InlineKeyboardButton('📜 Rules', callback_data='show_rules'),
+        InlineKeyboardButton('🔌 Port Info', callback_data='show_ports'),
+        InlineKeyboardButton('⚡ Speed Test', callback_data='run_speedtest'), 
+        InlineKeyboardButton('❓ Help', callback_data='show_help')
     )
     return markup
 
 def confirm_reboot_keyboard():
     markup = InlineKeyboardMarkup()
     markup.add(
-        InlineKeyboardButton("✅ হ্যাঁ, রিবুট করুন", callback_data="confirm_reboot"),
-        InlineKeyboardButton("❌ না, বাতিল", callback_data="cancel_action")
+        InlineKeyboardButton("✅ Yes, Reboot", callback_data="confirm_reboot"),
+        InlineKeyboardButton("❌ No, Cancel", callback_data="cancel_action")
     )
     return markup
 
-# ============== সাধারণ কমান্ড ও বাটন হ্যান্ডলার ==============
+# ============== General Command and Button Handlers ==============
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
     if user_id in BOT_OWNER_IDS:
-        welcome_message = "<b>👋 হ্যালো এডমিন বস!</b> 👑\nসার্ভার ম্যানেজমেন্ট বট আপনার সেবায় প্রস্তুত।\nকী করতে পারি আপনার জন্য?"
+        welcome_message = "<b>👋 হ্যালো Admin!</b> 👑\nসার্ভার ম্যানেজমেন্ট বট আপনার সেবায় প্রস্তুত।\nকীভাবে সাহায্য করতে পারি আপনাকে?"
     else:
-        welcome_message = f"<b>স্বাগতম ইউজার, {message.from_user.full_name}!</b>\nআমি আপনাদের সার্ভার ম্যানেজমেন্ট বট। 🤖"
+        welcome_message = f"<b>স্বাগতম, {message.from_user.full_name}!</b>\nআমি একটি সার্ভার ম্যানেজমেন্ট বট। 🤖"
     
     bot.reply_to(message, _add_credit_line(welcome_message), reply_markup=generate_main_keyboard())
 
@@ -299,45 +299,45 @@ def send_help(message):
     _, is_group_admin = check_group_membership_and_admin(user_id)
 
     if is_owner or is_group_admin:
-        help_text = """<pre>┌─ 🛠️ অ্যাডমিন হ্যাল্প মেন্যু
+        help_text = """<pre>┌─ 🛠️ Admin Help Menu
 │
-├─╼ 💾 কনটেন্ট ম্যানেজমেন্ট
-│  ├─ /save [নাম] (রিপ্লাই দিয়ে)
-│  │  └─ ভিডিও/ফাইল/টেক্সট সেভ করে।
+├─╼ 💾 Content Management
+│  ├─ /save [name] (reply to media/text)
+│  │  └─ Saves video/file/text as a custom command.
 │  ├─ /listcmd
-│  │  └─ সকল সেভ করা কমান্ডের তালিকা।
-│  └─ /delcmd [নাম]
-│     └─ সেভ করা কমান্ড মুছে ফেলে।
+│  │  └─ Lists all saved commands.
+│  └─ /delcmd [name]
+│     └─ Deletes a saved command.
 │
-└─╼ ⚙️ সার্ভার ও গ্রুপ টুলস
-   ├─ /reboot  : সার্ভার রিবুট করে।
-   ├─ /mentionall [বার্তা]
-   │  └─ গ্রুপে সবাইকে ঘোষণা দেয়।
-   ├─ /run [cmd] : টার্মিনাল কমান্ড চালায়। (বট মালিকের জন্য)
-   └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+└─╼ ⚙️ Server & Group Tools
+   ├─ /reboot  : Reboots the server.
+   ├─ /mentionall [message]
+   │  └─ Announces a message to everyone in the group.
+   ├─ /run [cmd] : Executes a terminal command. (For Bot Owners only)
+   └─ /speedtest : Tests server's internet speed.
 
-┌─ 🤖 সাধারণ ইউজার হ্যাল্প মেন্যু ──╼
+┌─ 🤖 General User Help Menu ──╼
 │
-├─╼ ⚙️ সার্ভার তথ্য
-│  ├─ /report : সার্ভারের বিস্তারিত রিপোর্ট।
-│  ├─ /health : সার্ভারের স্বাস্থ্য পরীক্ষা।
-│  ├─ /status : চলমান সার্ভিসগুলোর অবস্থা।
-│  ├─ /ports  : পোর্ট তালিকা।
-│  ├─ /rules  : নিয়মাবলী।
-│  └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+├─╼ ⚙️ Server Info
+│  ├─ /report : Detailed server report.
+│  ├─ /health : Server health check.
+│  ├─ /status : Running services status.
+│  ├─ /ports  : Port list.
+│  ├─ /rules  : Usage rules.
+│  └─ /speedtest : Tests server's internet speed.
 │
 └─╼ </pre>"""
         bot.reply_to(message, _add_credit_line(help_text))
     else:
-        user_help_text = """<pre>┌─ 🤖 সাধারণ হ্যাল্প মেন্যু
+        user_help_text = """<pre>┌─ 🤖 General Help Menu
 │
-├─╼ ⚙️ সার্ভার তথ্য
-│  ├─ /report : সার্ভারের বিস্তারিত রিপোর্ট।
-│  ├─ /health : সার্ভারের স্বাস্থ্য পরীক্ষা।
-│  ├─ /status : চলমান সার্ভিসগুলোর অবস্থা।
-│  ├─ /ports  : পোর্ট তালিকা।
-│  ├─ /rules  : নিয়মাবলী।
-│  └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+├─╼ ⚙️ Server Info
+│  ├─ /report : Detailed server report.
+│  ├─ /health : Server health check.
+│  ├─ /status : Running services status.
+│  ├─ /ports  : Port list.
+│  ├─ /rules  : Usage rules.
+│  └─ /speedtest : Tests server's internet speed.
 │
 └─╼ </pre>"""
         bot.reply_to(message, _add_credit_line(user_help_text))
@@ -397,44 +397,44 @@ def handle_general_menu_callbacks(call):
             _, is_group_admin = check_group_membership_and_admin(user_id)
 
             if is_owner or is_group_admin:
-                help_text = """<pre>┌─ 🛠️ অ্যাডমিন হ্যাল্প মেন্যু
+                help_text = """<pre>┌─ 🛠️ Admin Help Menu
 │
-├─╼ 💾 কনটেন্ট ম্যানেজমেন্ট
-│  ├─ /save [নাম] (রিপ্লাই দিয়ে)
-│  │  └─ ভিডিও/ফাইল/টেক্সট সেভ করে।
+├─╼ 💾 Content Management
+│  ├─ /save [name] (reply to media/text)
+│  │  └─ Saves video/file/text as a custom command.
 │  ├─ /listcmd
-│  │  └─ সকল সেভ করা কমান্ডের তালিকা।
-│  └─ /delcmd [নাম]
-│     └─ সেভ করা কমান্ড মুছে ফেলে।
+│  │  └─ Lists all saved commands.
+│  └─ /delcmd [name]
+│     └─ Deletes a saved command.
 │
-└─╼ ⚙️ সার্ভার ও গ্রুপ টুলস
-   ├─ /reboot  : সার্ভার রিবুট করে।
-   ├─ /mentionall [বার্তা]
-   │  └─ গ্রুপে সবাইকে ঘোষণা দেয়।
-   ├─ /run [cmd] : টার্মিনাল কমান্ড চালায়। (বট মালিকের জন্য)
-   └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+└─╼ ⚙️ Server & Group Tools
+   ├─ /reboot  : Reboots the server.
+   ├─ /mentionall [message]
+   │  └─ Announces a message to everyone in the group.
+   ├─ /run [cmd] : Executes a terminal command. (For Bot Owners only)
+   └─ /speedtest : Tests server's internet speed.
 
-┌─ 🤖 সাধারণ ইউজার হ্যাল্প মেন্যু ──╼
+┌─ 🤖 General User Help Menu ──╼
 │
-├─╼ ⚙️ সার্ভার তথ্য
-│  ├─ /report : সার্ভারের বিস্তারিত রিপোর্ট।
-│  ├─ /health : সার্ভারের স্বাস্থ্য পরীক্ষা।
-│  ├─ /status : চলমান সার্ভিসগুলোর অবস্থা।
-│  ├─ /ports  : পোর্ট তালিকা।
-│  ├─ /rules  : নিয়মাবলী।
-│  └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+├─╼ ⚙️ Server Info
+│  ├─ /report : Detailed server report.
+│  ├─ /health : Server health check.
+│  ├─ /status : Running services status.
+│  ├─ /ports  : Port list.
+│  ├─ /rules  : Usage rules.
+│  └─ /speedtest : Tests server's internet speed.
 │
 └─╼ </pre>"""
             else:
-                help_text = """<pre>┌─ 🤖 সাধারণ হ্যাল্প মেন্যু
+                help_text = """<pre>┌─ 🤖 General Help Menu
 │
-├─╼ ⚙️ সার্ভার তথ্য
-│  ├─ /report : সার্ভারের বিস্তারিত রিপোর্ট।
-│  ├─ /health : সার্ভারের স্বাস্থ্য পরীক্ষা।
-│  ├─ /status : চলমান সার্ভিসগুলোর অবস্থা।
-│  ├─ /ports  : পোর্ট তালিকা।
-│  ├─ /rules  : নিয়মাবলী।
-│  └─ /speedtest : সার্ভারের ইন্টারনেট স্পিড টেস্ট করে।
+├─╼ ⚙️ Server Info
+│  ├─ /report : Detailed server report.
+│  ├─ /health : Server health check.
+│  ├─ /status : Running services status.
+│  ├─ /ports  : Port list.
+│  ├─ /rules  : Usage rules.
+│  └─ /speedtest : Tests server's internet speed.
 │
 └─╼ </pre>"""
             _edit_message_safe(msg_chat_id, msg_message_id, _add_credit_line(help_text), reply_markup=generate_main_keyboard())
@@ -484,7 +484,7 @@ def send_report_action(chat_id, message_id):
         # Bot Uptime
         bot_uptime = get_bot_uptime()
 
-        report_text = f"""📊 <b>বর্তমান সার্ভার স্ট্যাটাস রিপোর্ট</b> 📊
+        report_text = f"""📊 <b>Current Server Status Report</b> 📊
 
 <pre>╭─BOT STATISTICS :
 │  Bot Uptime :{bot_uptime}
@@ -513,7 +513,7 @@ def send_report_action(chat_id, message_id):
 │  Domain:{domain}
 ╰───────────</pre>
 
-✅ সার্ভার স্ট্যাবল এবং সক্রিয় আছে।"""
+✅ সার্ভার স্থিতিশীল এবং সক্রিয় আছে।"""
         _edit_message_safe(chat_id, message_id, _add_credit_line(report_text), reply_markup=generate_main_keyboard())
     except Exception as e:
         _edit_message_safe(chat_id, message_id, f"❌ রিপোর্ট তৈরি করতে সমস্যা হয়েছে: <code>{e}</code>", reply_markup=generate_main_keyboard())
@@ -529,9 +529,9 @@ def server_health_action(chat_id, message_id):
 
         def create_bar(p, l=12): return f"[{'█' * int(l * p / 100)}{'░' * (l - int(l * p / 100))}] {p:.1f}%"
 
-        health_report = f"""🩺 <b>সার্ভার এর স্বাস্থ্য চেকআপ 🫦</b>
+        health_report = f"""🩺 <b>Server Health Checkup</b> 🫦
 
-<pre>╭─ আমার নাঁড়ি-ভুঁড়ির ব্যবহার
+<pre>╭─ Resource Usage
 │  CPU : {create_bar(cpu)}
 │  RAM : {create_bar(ram)}
 │  Disk: {create_bar(disk_percent)}
@@ -549,18 +549,15 @@ def show_service_status_action(chat_id, message_id):
 
 def send_rules_action(chat_id, message_id):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
-    rules_text = """📜 <b>সার্ভার ব্যবহারের নিয়মাবলী</b>
+    rules_text = """📜 <b>Server Usage Rules</b>
 
 <pre>╭─ General Rules
-│  1. টরেন্ট বা অতিরিক্ত ডাউনলোড নিষিদ্ধ,
-│     কম কম ডাউনলোড দেওয়ার চেষ্টা
-│     করবেন সবাই।
-│  2. এক একাউন্ট একাধিক ডিভাইসে,
-│     ব্যবহার করলে একাউন্ট ব্যান করা হবে।
-│
-│  3. কোনো ধরনের অবৈধ ১৮+ সাইট এবং
-│     ডার্ক ওয়েব ভিজিট নিষিদ্ধ এগুলার জন্য,
-│     VPS ব্যান হতে পারে ।
+│  1. টরেন্ট বা অতিরিক্ত ডাউনলোড নিষিদ্ধ।
+│     সবাই কম ডাউনলোড করার চেষ্টা করবেন।
+│  2. একই অ্যাকাউন্ট একাধিক ডিভাইসে ব্যবহার করলে,
+│     অ্যাকাউন্টটি ব্যান করা হবে।
+│  3. যেকোনো ধরনের অবৈধ 18+ সাইট এবং ডার্ক ওয়েব ভিজিট নিষিদ্ধ।
+│     এগুলোর জন্য VPS ব্যান হতে পারে।
 ╰───────────</pre>"""
     _edit_message_safe(chat_id, message_id, _add_credit_line(rules_text), reply_markup=generate_main_keyboard())
 
@@ -591,17 +588,16 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
     # Determine which message to edit or if a new one needs to be sent
     if message_id_to_edit:
         # Edit existing message (from callback)
-        _edit_message_safe(chat_id, message_id_to_edit, "⏳ স্পিড টেস্ট চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", reply_markup=None)
+        _edit_message_safe(chat_id, message_id_to_edit, "⏳ Speed Test চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", reply_markup=None)
         msg_id_for_final_edit = message_id_to_edit
     else:
         # Send a new temporary message (from direct command)
-        temp_msg = bot.send_message(chat_id, "⏳ স্পিড টেস্ট চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", reply_markup=None)
+        temp_msg = bot.send_message(chat_id, "⏳ Speed Test চলছে... এতে কিছুক্ষণ সময় লাগতে পারে।", reply_markup=None)
         msg_id_for_final_edit = temp_msg.message_id
 
     bot.send_chat_action(chat_id, 'typing') # Show typing action
 
     try:
-        # Corrected: Removed '--share' as it's not recognized by this speedtest version
         result = subprocess.run(['speedtest', '--format=json'], capture_output=True, text=True, timeout=300)
         output_json = result.stdout.strip()
 
@@ -612,8 +608,8 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
             ip_address = data.get('interface', {}).get('externalIp', 'N/A')
             isp = data.get('isp', 'N/A')
             ping_ms = data.get('ping', {}).get('latency', 'N/A')
-            isp_rating = data.get('ispRating', 'N/A') # This field might not always be present
-            sponsor = data.get('server', {}).get('sponsor', 'N/A')
+            isp_rating = data.get('ispRating', 'N/A') 
+            # sponsor = data.get('server', {}).get('sponsor', 'N/A') # Removed as requested
 
             # Download/Upload in bytes, convert to Mbps
             download_bps = data.get('download', {}).get('bandwidth', 0)
@@ -625,52 +621,52 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
             country = data.get('server', {}).get('country', 'N/A')
             lat_lon = f"{data.get('server', {}).get('lat', 'N/A')}, {data.get('server', {}).get('lon', 'N/A')}"
             
-            # Corrected: Get share URL from 'result.url' key
             share_url = data.get('result', {}).get('url', 'N/A')
 
-            speed_text = f"""⚡ <b>স্পিড টেস্ট রেজাল্ট</b> ⚡
+            speed_text = f"""⚡ <b>Speed Test Result</b> ⚡
 
-🌐 <b><u>ইন্টারফেস তথ্য:</u></b>
+🔗 <b><u>Share Link:</u></b>
+  ‣  <a href='{share_url}'>Speedtest.net Result</a>
+    <i>(এই লিংকে ক্লিক করে বিস্তারিত গ্রাফ দেখতে পারবেন)</i>
+
+🌐 <b><u>Interface Info:</u></b>
   ‣  <b>IP:</b> <a href='https://ipinfo.io/{ip_address}'>{ip_address}</a>
   ‣  <b>ISP:</b> <i>{isp}</i>
-  ‣  <b>ISP রেটিং:</b> <i>{isp_rating}</i>
+  ‣  <b>ISP Rating:</b> <i>{isp_rating}</i>
 
-📡 <b><u>সার্ভার তথ্য:</u></b>
-  ‣  <b>সার্ভার:</b> <i>{server_name}, {country}</i>
-  ‣  <b>স্পন্সর:</b> <i>{sponsor}</i>
-  ‣  <b>ল্যাট/লং:</b> <i>{lat_lon}</i>
+📡 <b><u>Server Info:</u></b>
+  ‣  <b>Server:</b> <i>{server_name}, {country}</i>
+  ‣  <b>Lat/Lon:</b> <i>{lat_lon}</i>
 
-📊 <b><u>পারফরম্যান্স:</u></b>
-  ‣  <b>পিং:</b> <code>{ping_ms:.0f} ms</code>
-  ‣  <b>ডাউনলোড:</b> <code>{download_mbps}</code>
-  ‣  <b>আপলোড:</b> <code>{upload_mbps}</code>
+📊 <b><u>Performance:</u></b>
+  ‣  <b>Ping:</b> <code>{ping_ms:.0f} ms</code>
+  ‣  <b>Download:</b> <code>{download_mbps}</code>
+  ‣  <b>Upload:</b> <code>{upload_mbps}</code>
 
-🔗 <b><u>শেয়ার লিংক:</u></b>
-  ‣  <a href='{share_url}'>Speedtest.net Result</a>
-
-✅ আপনার সার্ভারের ইন্টারনেট স্পিড টেস্ট সফলভাবে সম্পন্ন হয়েছে!"""
+✅ আপনার সার্ভারের ইন্টারনেট স্পিড টেস্ট সফলভাবে সম্পন্ন হয়েছে!"""
             _edit_message_safe(chat_id, msg_id_for_final_edit, _add_credit_line(speed_text), reply_markup=generate_main_keyboard(), disable_web_page_preview=False)
         else:
             error_output = result.stderr.strip() if result.stderr else "কোনো আউটপুট নেই।"
-            _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট ব্যর্থ হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।\nবিস্তারিত:\n<pre>{error_output}</pre>", reply_markup=generate_main_keyboard())
+            _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ Speed Test ব্যর্থ হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।\nবিস্তারিত:\n<pre>{error_output}</pre>", reply_markup=generate_main_keyboard())
     except FileNotFoundError:
         _edit_message_safe(chat_id, msg_id_for_final_edit, "❌ `speedtest` কমান্ডটি খুঁজে পাওয়া যায়নি। সার্ভারে `Ookla Speedtest CLI` ইন্সটল করা আছে কিনা নিশ্চিত করুন। যদি না থাকে, তাদের অফিসিয়াল ওয়েবসাইট থেকে এটি ইন্সটল করতে পারেন।", reply_markup=generate_main_keyboard())
     except subprocess.TimeoutExpired:
-        _edit_message_safe(chat_id, msg_id_for_final_edit, "❌ স্পিড টেস্ট সময়সীমা অতিক্রম করেছে।", reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, "❌ Speed Test সময়সীমা অতিক্রম করেছে।", reply_markup=generate_main_keyboard())
     except json.JSONDecodeError:
-        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট থেকে অবৈধ আউটপুট পাওয়া গেছে। `speedtest` কমান্ডটি ঠিকভাবে কাজ করছে না।\nআউটপুট:\n<pre>{output_json}</pre>", reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ Speed Test থেকে অবৈধ আউটপুট পাওয়া গেছে। `speedtest` কমান্ডটি ঠিকভাবে কাজ করছে না।\nআউটপুট:\n<pre>{output_json}</pre>", reply_markup=generate_main_keyboard())
     except Exception as e:
-        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ স্পিড টেস্ট চলাকালীন অপ্রত্যাশিত ত্রুটি: <code>{e}</code>", reply_markup=generate_main_keyboard())
+        _edit_message_safe(chat_id, msg_id_for_final_edit, f"❌ Speed Test চলাকালীন অপ্রত্যাশিত ত্রুটি: <code>{e}</code>", reply_markup=generate_main_keyboard())
 
 
-# ============== গ্রুপ ম্যানেজমেন্ট হ্যান্ডলার ==============
+# ============== Group Management Handler ==============
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_new_member(message):
     if message.chat.id == GROUP_ID:
         for user in message.new_chat_members:
-            bot.send_message(GROUP_ID, _add_credit_line(f"<b>🖤 স্বাগতম,</b><i> {user.full_name}!</i>🥰\nআমাদের প্রিমিয়াম সার্ভিস এ জয়েন করার জন্য আপনাকে ধন্যবাদ 💚 \nআপনার জন্য উপযোগী কমান্ড \nদেখতে <code>/help</code> কামন্ড দিন 🧯\n সার্ভার রুলস দেখতে <code>/rules</code> কমান্ড দিন 🧊।"))
+            # Welcome message for new members, adjusted language
+            bot.send_message(GROUP_ID, _add_credit_line(f"<b>🖤 স্বাগতম,</b><i> {user.full_name}!</i>🥰\nআমাদের Premium Service-এ জয়েন করার জন্য আপনাকে ধন্যবাদ 💚 \nউপযোগী কমান্ড দেখতে <code>/help</code> কমান্ড দিন 🧯\nসার্ভার নিয়মাবলী দেখতে <code>/rules</code> কমান্ড দিন 🧊।"))
 
-# ============== অ্যাডমিন কমান্ড হ্যান্ডলার ==============
+# ============== Admin Command Handlers ==============
 
 @bot.message_handler(commands=['save'])
 @premium_user_required 
@@ -680,9 +676,9 @@ def handle_save_command(message):
     command_name = command_name_args.split()[0] if command_name_args else ""
 
     if not message.reply_to_message:
-        return bot.reply_to(message, "❌ একটি ফাইলে বা টেক্সটে রিপ্লাই করে কমান্ডটি ব্যবহার করুন।")
+        return bot.reply_to(message, "❌ একটি ফাইল বা টেক্সটে রিপ্লাই করে কমান্ডটি ব্যবহার করুন।")
     if not command_name:
-        return bot.reply_to(message, "<b>ব্যবহার:</b> <code>/save [নাম]</code>")
+        return bot.reply_to(message, "<b>Usage:</b> <code>/save [name]</code>")
 
     reply = message.reply_to_message
     file_id = None
@@ -705,7 +701,7 @@ def handle_save_command(message):
         caption = "" # For text content, caption is usually not needed/relevant
 
     if not file_id:
-        return bot.reply_to(message, "❌ শুধুমাত্র ভিডিও, ডকুমেন্ট, ফটো বা টেক্সট সেভ করা যাবে।")
+        return bot.reply_to(message, "❌ শুধুমাত্র ভিডিও, ডকুমেন্ট, ছবি বা টেক্সট সেভ করা যাবে।") 
 
     save_command(command_name, file_id, caption, file_type)
     bot.reply_to(message, f"✅ `/{command_name}` কমান্ডটি সফলভাবে সেভ করা হয়েছে।")
@@ -716,8 +712,8 @@ def handle_save_command(message):
 def handle_listcmd_command(message):
     commands = get_all_commands()
     if not commands:
-        return bot.reply_to(message, "📂 কোনো কমান্ড সেভ করা হয়নি।")
-    cmd_list = "<b>📂 সংরক্ষিত কমান্ড:</b>\n\n" + "\n".join([f"• `/{cmd[0]}`" for cmd in commands])
+        return bot.reply_to(message, "📂 No commands saved yet.") 
+    cmd_list = "<b>📂 Saved Commands:</b>\n\n" + "\n".join([f"• `/{cmd[0]}`" for cmd in commands])
     bot.reply_to(message, cmd_list)
 
 @bot.message_handler(commands=['delcmd'])
@@ -726,19 +722,19 @@ def handle_listcmd_command(message):
 def handle_delcmd_command(message):
     args = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else ""
     if not args:
-        return bot.reply_to(message, "<b>ব্যবহার:</b> <code>/delcmd [নাম]</code>")
+        return bot.reply_to(message, "<b>Usage:</b> <code>/delcmd [name]</code>")
     command_name = args.split()[0]
     if get_command(command_name):
         delete_command_from_db(command_name)
         bot.reply_to(message, f"✅ `/{command_name}` কমান্ডটি মুছে ফেলা হয়েছে।")
     else:
-        bot.reply_to(message, "❌ আপাতত এই নামে কোনো কমান্ড নেই।")
+        bot.reply_to(message, "❌ No saved command found with this name.") 
 
 @bot.message_handler(commands=['reboot'])
 @premium_user_required
 @admin_required
 def handle_reboot_command(message):
-    bot.reply_to(message, "⚠️বস! আপনি কি সত্যিই সার্ভারটি রিবুট করতে চান? 🤔", reply_markup=confirm_reboot_keyboard())
+    bot.reply_to(message, "⚠️ Are you sure you want to Reboot the server? 🤔", reply_markup=confirm_reboot_keyboard())
 
 @bot.message_handler(commands=['mentionall'])
 @premium_user_required
@@ -748,9 +744,9 @@ def handle_mentionall_command(message):
         return bot.reply_to(message, "এই কমান্ডটি শুধুমাত্র নির্ধারিত গ্রুপে কাজ করবে।")
     args = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else ""
     if not args:
-        return bot.reply_to(message, "<b>ব্যবহার:</b> <code>/mentionall [বার্তা]</code>")
+        return bot.reply_to(message, "<b>Usage:</b> <code>/mentionall [message]</code>")
     
-    bot.send_message(GROUP_ID, f"📣 <b><u>সকলের জন্য বিজ্ঞপ্তি!</u></b> 📣\n\n{args}")
+    bot.send_message(GROUP_ID, f"📣 <b><u>গুরুত্বপূর্ণ বিজ্ঞপ্তি!</u></b> 📣\n\n{args}")
 
 @bot.message_handler(commands=['run'])
 @premium_user_required 
@@ -758,26 +754,26 @@ def handle_mentionall_command(message):
 def handle_run_command(message):
     args = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else ""
     if not args:
-        return bot.reply_to(message, "<b>ব্যবহার:</b> <code>/run [কমান্ড]</code>")
-    msg = bot.reply_to(message, f"⏳ কমান্ড চলছে...\n<pre>{args}</pre>")
+        return bot.reply_to(message, "<b>Usage:</b> <code>/run [command]</code>")
+    msg = bot.reply_to(message, f"⏳ Command executing...\n<pre>{args}</pre>") 
     bot.send_chat_action(message.chat.id, 'typing') # Show typing action
     try:
         res = subprocess.run(args, shell=True, capture_output=True, text=True, timeout=120)
         output = (res.stdout + res.stderr).strip()
         if not output:
-            output = "✅ সফল, কোনো আউটপুট নেই।"
+            output = "✅ Successful, no output." 
         
         if len(output) > 4096:
             with open("output.txt", "w", encoding='utf-8') as f: f.write(output)
-            with open("output.txt", "rb") as f: bot.send_document(message.chat.id, f, caption="কমান্ড আউটপুট")
+            with open("output.txt", "rb") as f: bot.send_document(message.chat.id, f, caption="Command Output")
             os.remove("output.txt"); bot.delete_message(msg.chat.id, msg.message_id)
         else:
-            _edit_message_safe(msg.chat.id, msg.message_id, f"<b>আপনার কমান্ড এর ফলাফল 🤟:</b>\n<pre>{output}</pre>")
+            _edit_message_safe(msg.chat.id, msg.message_id, f"<b>Your Command Result 🤟:</b>\n<pre>{output}</pre>") 
     except Exception as e:
-        _edit_message_safe(msg.chat.id, msg.message_id, f"❌ কমান্ড ব্যর্থ: <code>{e}</code>")
+        _edit_message_safe(msg.chat.id, msg.message_id, f"❌ Command failed: <code>{e}</code>")
 
 
-# ============== কলব্যাক হ্যান্ডলার (রিবুট কনফার্মেশনের জন্য) ==============
+# ============== Callback Handler (for Reboot confirmation) ==============
 @bot.callback_query_handler(func=lambda call: call.data in ["confirm_reboot", "cancel_action"])
 @premium_user_required
 @admin_required
@@ -787,18 +783,18 @@ def handle_reboot_callback_query(call):
 
     if action == "confirm_reboot":
         try:
-            _edit_message_safe(msg.chat.id, msg.message_id, "✅ রিবুট কমান্ড পাঠানো হয়েছে। \n⚠️ সার্ভার কিছুক্ষণের জন্য অফলাইন হয়ে যাবে।", reply_markup=None)
+            _edit_message_safe(msg.chat.id, msg.message_id, "✅ Reboot command sent. \n⚠️ The server will be offline for a while.", reply_markup=None) 
             subprocess.run(['sudo', 'reboot'], check=True)
         except Exception as e:
-            _edit_message_safe(msg.chat.id, msg.message_id, f"❌ রিবুট ব্যর্থ হয়েছে: <code>{e}</code>")
+            _edit_message_safe(msg.chat.id, msg.message_id, f"❌ Reboot failed: <code>{e}</code>")
 
     elif action == "cancel_action":
-        _edit_message_safe(msg.chat.id, msg.message_id, "👍 কাজটি বাতিল করা হয়েছে।", reply_markup=None)
+        _edit_message_safe(msg.chat.id, msg.message_id, "👍 Action cancelled.", reply_markup=None)
 
     bot.answer_callback_query(call.id)
 
 
-# ============== কাস্টম কমান্ড হ্যান্ডলার (ডাইনামিক) ==============
+# ============== Custom Command Handler (Dynamic) ==============
 @bot.message_handler(func=lambda message: message.text and message.text.startswith('/'))
 @premium_user_required
 def handle_custom_commands(message):
@@ -815,20 +811,20 @@ def handle_custom_commands(message):
                 bot.send_chat_action(message.chat.id, file_type) # Show "sending video/photo/document" status
                 sender_map[file_type](message.chat.id, file_id, caption=caption)
         except Exception as e:
-            bot.reply_to(message, f"❌ ফাইল পাঠাতে সমস্যা: <code>{e}</code>")
+            bot.reply_to(message, f"❌ Problem sending file: <code>{e}</code>") 
     # If it's not a saved custom command, and wasn't caught by other handlers,
     # it will simply be ignored.
 
-# ============== স্টার্টআপ ==============
+# ============== Startup ==============
 if __name__ == '__main__':
-    print("বট চালু হচ্ছে...")
+    print("Bot is starting...") 
     init_db()
     for owner_id in BOT_OWNER_IDS:
         try:
             # Send silent startup message to owners
-            bot.send_message(owner_id, "✅ বট সফলভাবে চালু হয়েছে।", disable_notification=True)
+            bot.send_message(owner_id, "✅ Bot successfully started.", disable_notification=True)
         except Exception as e:
-            print(f"মালিক {owner_id} কে বার্তা পাঠাতে ব্যর্থ: {e}")
+            print(f"Failed to send message to owner {owner_id}: {e}") 
     print("Bot is running...")
     
     bot.infinity_polling(timeout=90, long_polling_timeout=60, allowed_updates=['message', 'callback_query', 'new_chat_members'])
