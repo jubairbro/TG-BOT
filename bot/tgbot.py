@@ -14,7 +14,7 @@ from functools import wraps
 
 # ============== কনফিগারেশন ==============
 BOT_TOKEN = "your_bot_token" # আপনার বটের টোকেন এখানে দিন
-BOT_OWNER_IDS = [00001726262,18363637373,52820202373773] # আপনার বা বটের মালিকদের আইডি এখানে দিন (একাধিক হলে কমা দিয়ে)
+BOT_OWNER_IDS = [5487394544,1956820398,6801360422] # আপনার বা বটের মালিকদের আইডি এখানে দিন (একাধিক হলে কমা দিয়ে)
 GROUP_ID = -1002758027133 # ওয়েলকাম মেসেজ, /mentionall এবং বট ব্যবহারের অনুমতির জন্য গ্রুপের আইডি
 DB_FILE = "/root/bot/commands.db" # ভিডিও কমান্ড সংরক্ষণের জন্য ডেটাবেস
 # =========================================
@@ -184,7 +184,7 @@ def owner_required(func):
         user_id, _ = _get_user_and_chat_id(message_or_call)
         if user_id in BOT_OWNER_IDS:
             return func(message_or_call)
-        _send_permission_denied_message(message_or_call, "❌ এই কমান্ডটি শুধুমাত্র বটের মালিকের জন্য।")
+        _send_permission_denied_message(message_or_call, "❌ এই কমান্ডটি শুধুমাত্র বটের Owner জন্য।")
         return
     return wrapper
 
@@ -218,15 +218,15 @@ def check_service_status(service_name):
 
         result = subprocess.run(['systemctl', 'is-active', '--quiet', actual_service_name], capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
-            return "GOOD"
+            return "GOOD✅"
         else:
-            return "BAD"
+            return "BAD❌"
     except FileNotFoundError:
-        return "UNKNOWN (systemctl command not found)"
+        return "UNKNOWN ⚠️(systemctl command not found)"
     except subprocess.TimeoutExpired:
-        return "TIMEOUT (Service status check timed out)"
+        return "TIMEOUT ⌛(Service status check timed out)"
     except Exception as e:
-        return f"ERROR ({e})"
+        return f"ERROR ⛔({e})"
 
 def get_formatted_service_status():
     """Generates a formatted string of service statuses."""
@@ -286,9 +286,9 @@ def confirm_reboot_keyboard():
 def send_welcome(message):
     user_id = message.from_user.id
     if user_id in BOT_OWNER_IDS:
-        welcome_message = "<b>👋 হ্যালো বস!</b> 👑\nসার্ভার ম্যানেজমেন্ট বট আপনার সেবায় প্রস্তুত।\nকী করতে পারি আপনার জন্য?"
+        welcome_message = "<b>👋 হ্যালো এডমিন বস!</b> 👑\nসার্ভার ম্যানেজমেন্ট বট আপনার সেবায় প্রস্তুত।\nকী করতে পারি আপনার জন্য?"
     else:
-        welcome_message = f"<b>স্বাগতম, {message.from_user.full_name}!</b>\nআমি আপনাদের সার্ভার ম্যানেজমেন্ট বট। 🤖"
+        welcome_message = f"<b>স্বাগতম ইউজার, {message.from_user.full_name}!</b>\nআমি আপনাদের সার্ভার ম্যানেজমেন্ট বট। 🤖"
     
     bot.reply_to(message, _add_credit_line(welcome_message), reply_markup=generate_main_keyboard())
 
@@ -460,7 +460,7 @@ def send_report_action(chat_id, message_id):
         total_ram_gb, used_ram_gb, ram_percent = mem.total / (1024**3), mem.used / (1024**3), mem.percent
         uptime_seconds = time.time() - psutil.boot_time()
         d, rem = divmod(uptime_seconds, 86400); h, rem = divmod(rem, 3600); m, _ = divmod(rem, 60)
-        system_uptime = f"{int(d)} দিন,{int(h)} ঘণ্টা,{int(m)} মিনিট"
+        system_uptime = f"{int(d)} day,{int(h)} hour,{int(m)} minute"
         ip_address, domain = get_ip_address(), get_domain()
 
         disk_usage = psutil.disk_usage('/')
@@ -486,7 +486,7 @@ def send_report_action(chat_id, message_id):
         report_text = f"""📊 <b>বর্তমান সার্ভার স্ট্যাটাস রিপোর্ট</b> 📊
 
 <pre>╭─BOT STATISTICS :
-│  Bot Uptime : {bot_uptime}
+│  Bot Uptime :{bot_uptime}
 ╰───────────</pre>
 <pre>╭─CPU Information
 │  Cores: {cpu_cores}
@@ -737,7 +737,7 @@ def handle_delcmd_command(message):
 @premium_user_required
 @admin_required
 def handle_reboot_command(message):
-    bot.reply_to(message, "🤔 আপনি কি সত্যিই সার্ভারটি রিবুট করতে চান?", reply_markup=confirm_reboot_keyboard())
+    bot.reply_to(message, "⚠️বস! আপনি কি সত্যিই সার্ভারটি রিবুট করতে চান? 🤔", reply_markup=confirm_reboot_keyboard())
 
 @bot.message_handler(commands=['mentionall'])
 @premium_user_required
