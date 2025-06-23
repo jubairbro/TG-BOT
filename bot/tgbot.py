@@ -7,9 +7,9 @@ import subprocess
 import os
 import time
 import sqlite3
-import json # Added for JSON parsing in speedtest
+import json
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
-from telebot import apihelper # Import for error handling
+from telebot.apihelper import ApiException # Corrected import for API exceptions
 from functools import wraps
 
 # ============== কনফিগারেশন ==============
@@ -94,7 +94,7 @@ def _edit_message_safe(chat_id, message_id, text, reply_markup=None, disable_web
     """
     try:
         bot.edit_message_text(text, chat_id, message_id, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
-    except apihelper.ApiError as e:
+    except ApiException as e: # Corrected exception type
         if e.error_code == 400 and "message is not modified" in str(e):
             # This error means the message content/markup is already what we tried to set.
             # It's not a critical error, so we can just log/pass.
@@ -117,7 +117,7 @@ def check_group_membership_and_admin(user_id):
             is_group_member = True
         if chat_member.status in ['administrator', 'creator']:
             is_group_admin = True
-    except telebot.apihelper.ApiError as e:
+    except ApiException as e: # Corrected exception type
         if "user not found" in str(e).lower() or "user is not a member" in str(e).lower() or "not a member" in str(e).lower():
             is_group_member = False
             is_group_admin = False
@@ -347,6 +347,7 @@ def send_help(message):
 @premium_user_required
 def handle_general_direct_commands(message):
     command_name = message.text.split()[0]
+    # Send a temporary "loading" message that will be edited later
     sent_message = bot.send_message(message.chat.id, "তথ্য লোড হচ্ছে...", reply_markup=None) 
 
     if command_name == '/report':
@@ -600,8 +601,8 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
     bot.send_chat_action(chat_id, 'typing') # Show typing action
 
     try:
-        # Changed to use --format=json and --share for Ookla speedtest CLI
-        result = subprocess.run(['speedtest', '--format=json', '--share'], capture_output=True, text=True, timeout=300)
+        # Corrected: Removed '--share' as it's not recognized by this speedtest version
+        result = subprocess.run(['speedtest', '--format=json'], capture_output=True, text=True, timeout=300)
         output_json = result.stdout.strip()
 
         if result.returncode == 0 and output_json:
@@ -611,7 +612,7 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
             ip_address = data.get('interface', {}).get('externalIp', 'N/A')
             isp = data.get('isp', 'N/A')
             ping_ms = data.get('ping', {}).get('latency', 'N/A')
-            isp_rating = data.get('ispRating', 'N/A') 
+            isp_rating = data.get('ispRating', 'N/A') # This field might not always be present
             sponsor = data.get('server', {}).get('sponsor', 'N/A')
 
             # Download/Upload in bytes, convert to Mbps
@@ -624,8 +625,8 @@ def run_speedtest_action(chat_id, message_id_to_edit=None):
             country = data.get('server', {}).get('country', 'N/A')
             lat_lon = f"{data.get('server', {}).get('lat', 'N/A')}, {data.get('server', {}).get('lon', 'N/A')}"
             
-            # Get share URL
-            share_url = data.get('share', {}).get('url', 'N/A')
+            # Corrected: Get share URL from 'result.url' key
+            share_url = data.get('result', {}).get('url', 'N/A')
 
             speed_text = f"""⚡ <b>স্পিড টেস্ট রেজাল্ট</b> ⚡
 
