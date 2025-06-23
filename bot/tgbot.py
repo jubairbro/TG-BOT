@@ -486,9 +486,9 @@ def send_report_action(chat_id, message_id):
 │  Total Disk Write : {total_write_mb:.2f} MB
 ╰───────────</pre>
 <pre>╭─Network & System
-│  System Uptime: {system_uptime}
-│  IP Address: {ip_address}
-│  Domain: {domain}
+│  System Uptime:{system_uptime}
+│  IP Address:{ip_address}
+│  Domain:{domain}
 ╰───────────</pre>
 
 ✅ সার্ভার স্ট্যাবল এবং সক্রিয় আছে।"""
@@ -531,12 +531,12 @@ def send_rules_action(chat_id, message_id):
 
 <pre>╭─ General Rules
 │  1. টরেন্ট বা অতিরিক্ত ডাউনলোড নিষিদ্ধ,
-│     কম কম ডাউনলোড দেওয়ার চেষ্টা\n করবেন সবাই।
-│
+│     কম কম ডাউনলোড দেওয়ার চেষ্টা
+│     করবেন সবাই।
 │  2. এক একাউন্ট একাধিক ডিভাইসে,
 │     ব্যবহার করলে একাউন্ট ব্যান করা হবে।
 │
-│ 3. কোনো ধরনের অবৈধ ১৮+ সাইট এবং
+│  3. কোনো ধরনের অবৈধ ১৮+ সাইট এবং
 │     ডার্ক ওয়েব ভিজিট নিষিদ্ধ এগুলার জন্য,
 │     VPS ব্যান হতে পারে ।
 ╰───────────</pre>"""
