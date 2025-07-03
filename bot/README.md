@@ -1,4 +1,4 @@
-অবশ্যই! এইবার আমি আপনাকে একটি **সম্পূর্ণ, ক্লীন এবং চূড়ান্ত গাইড** দিচ্ছি। এখানে একটি নতুন VPS-এ শুরু থেকে শেষ পর্যন্ত সাদিয়া বটের সর্বশেষ এবং সেরা সংস্করণটি সেটআপ করার জন্য প্রয়োজনীয় সবকিছু ধাপে ধাপে বলা আছে।
+একটি নতুন VPS-এ শুরু থেকে শেষ পর্যন্ত সাদিয়া বটের সর্বশেষ এবং সেরা সংস্করণটি সেটআপ করার জন্য প্রয়োজনীয় সবকিছু ধাপে ধাপে বলা আছে।
 
 এই গাইডটি অনুসরণ করলে আপনার আর অন্য কোনো কিছুর প্রয়োজন হবে না।
 
@@ -79,10 +79,10 @@ nano ~/sadiya_bot/.env
 # --- আপনার সকল গোপন তথ্য এখানে দিন ---
 
 # আপনার টেলিগ্রাম বটের টোকেন
-TELEGRAM_BOT_TOKEN="7855565302:AAGOHJiQ3V9Vs2TksvfvSOtECN7lwHiWbF8"
+TELEGRAM_BOT_TOKEN="0000000000:******"
 
 # আপনার জেমিনি API কী-গুলো কমা দিয়ে আলাদা করে দিন (কোনো স্পেস ছাড়া)
-GEMINI_API_KEYS="AIzaSyBCq0bPGbROm7lMb6WCqBh7YRuWvjPq-Bc,AIzaSyAeXJ0TzEExiDhD-6HCN3BwBCEShIaZUmY,AIzaSyDodiH-vuOy-IqXwXQ6wzEvOJPzNuWNUm4,AIzaSyApWwZFw07EFpGHta2RDclJvRYhIw537QY,AIzaSyCLpa8JP2aT3RxGuzFpjF16EBKNjR-h_NA,AIzaSyDqL-5tYCNmojGbUVfqUbNw2fa3aApfkak,AIzaSyBYGrV33_hv6q00E4x8XpihxgIKO7HOkUo,AIzaSyCmzOx6t-yTpuqAkWExBLBXIdX5O1bmfzY,AIzaSyBn_LIUrsUhhlGVclAIJOhOHotNjr77aAo,AIzaSyBQXdbLsGmCM9E6aWUN98iMyz3m4SXjtn8"
+GEMINI_API_KEYS="key1,key2,key3"
 
 # আপনার এবং অন্যান্য অ্যাডমিনদের টেলিগ্রাম ইউজার আইডি কমা দিয়ে আলাদা করে দিন
 ADMIN_USER_IDS="5487394544,6801360422,1095091493,1956820398,5967798239"
