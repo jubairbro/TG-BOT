@@ -22,7 +22,7 @@ from telegram.ext import (
 )
 
 # --- Configuration ---
-BOT_TOKEN = "7855565302:AAEonwt7NWmHFvnIVGQ1ZVxDOasiO5pkbl4"
+BOT_TOKEN = "bot_token"
 ADMIN_FILE = "admins.txt"
 OWNER_ID = 5487394544
 BOT_FOOTER = "\n© Bot by : @JubairFF"
